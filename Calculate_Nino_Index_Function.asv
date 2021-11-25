@@ -84,7 +84,7 @@ ts1 = timeseries(Nino_final,time);
 
 ts1.Name = 'Nino 1+2 Index SST vs. Time';
 ts1.TimeInfo.Units = 'days';
-ts1.TimeInfo.StartDate = 0000-01-01;     % Set start date.
+ts1.TimeInfo.StartDate = 00-00-0000;     % Set start date.
 ts1.TimeInfo.Format = 'yyyy';       % Set format for display on x-axis.
        % Express time relative to the start date.
 
