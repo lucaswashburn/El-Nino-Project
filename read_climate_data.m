@@ -11,14 +11,13 @@ time = ncread('b.e11.B1850C5CN.f09_g16.005.pop.h.SST.040001-049912.nc','time');
 TAREA = ncread('b.e11.B1850C5CN.f09_g16.005.pop.h.SST.040001-049912.nc','TAREA')';
 TLAT = ncread('b.e11.B1850C5CN.f09_g16.005.pop.h.SST.040001-049912.nc','TLAT')';
 TLONG =  ncread('b.e11.B1850C5CN.f09_g16.005.pop.h.SST.040001-049912.nc','TLONG')';
+
 %T Grid defines points from center of each square
 time_matrix = datevec(time);
 size(T);
 
 Nino_12_avgs = [];
-Nino_3_avgs = [];
-Nino_34_avgs = [];
-Nino_4_avgs = [];
+
 
 Monthly_Data_Matrix = [];
 
@@ -30,34 +29,53 @@ Monthly_Data_Matrix = [];
 %Niño 1+2 (0-10S, 90W-80W):
 
 
+% 
+% lat0 = -10
+% lat1 = 0
+% long0 = Convert_to_360_longitude(-90)
+% long1 = Convert_to_360_longitude(-80)
+% 
+% 
+% 
+% %bottom left coordinates
+% [m,long_coord] = min(abs(TLONG(1,:)-long0));
+% [m,lat_coord] = min(abs(TLAT(:,long_coord)-lat0));
+% coord00 = [long_coord, lat_coord]
+% 
+% %top left coordinates
+% [m,long_coord] = min(abs(TLONG(1,:)-long0));
+% [m,lat_coord] = min(abs(TLAT(:,long_coord)-lat1));
+% coord01 = [long_coord, lat_coord]
+% 
+% %top right coordinates
+% [m,long_coord] = min(abs(TLONG(1,:)-long1));
+% [m,lat_coord] = min(abs(TLAT(:,long_coord)-lat1));
+% coord11 = [long_coord, lat_coord]
+% 
+% %bottom right coordinates
+% [m,long_coord] = min(abs(TLONG(1,:)-long1));
+% [m,lat_coord] = min(abs(TLAT(:,long_coord)-lat0));
+% coord10 = [long_coord, lat_coord]
+% 
 
-lat0 = -10
-lat1 = 0
-long0 = Convert_to_360_longitude(-90)
-long1 = Convert_to_360_longitude(-80)
+%% mask method setup
 
-%bottom left coordinates
-[m,long_coord] = min(abs(TLONG(1,:)-long0));
-[m,lat_coord] = min(abs(TLAT(:,long_coord)-lat0));
-coord00 = [long_coord, lat_coord]
+latmin = -10
+latmax = 0
+longmin = Convert_to_360_longitude(-90)
+longmax = Convert_to_360_longitude(-80)
 
-%top left coordinates
-[m,long_coord] = min(abs(TLONG(1,:)-long0));
-[m,lat_coord] = min(abs(TLAT(:,long_coord)-lat1));
-coord01 = [long_coord, lat_coord]
+mask = ones(size(TAREA)); 
 
-%top right coordinates
-[m,long_coord] = min(abs(TLONG(1,:)-long1));
-[m,lat_coord] = min(abs(TLAT(:,long_coord)-lat1));
-coord11 = [long_coord, lat_coord]
+mask(TLAT < latmin) = nan; 
+mask(TLAT > latmax) = nan; 
+mask(TLONG > longmax) = nan; 
+mask(TLONG < longmin) = nan;
 
-%bottom right coordinates
-[m,long_coord] = min(abs(TLONG(1,:)-long1));
-[m,lat_coord] = min(abs(TLAT(:,long_coord)-lat0));
-coord10 = [long_coord, lat_coord]
+%1's and 0's, the 0's are the masked values
+mask10 = ~isnan(mask);
 
-
-
+%%
 % test
 
 % for counter = 1:size(T,4)
@@ -81,9 +99,16 @@ coord10 = [long_coord, lat_coord]
 
 surface = T(:,:,1,:);
 temperatures_permuted = permute(surface,[2 1 4 3]);
-Nino_12_temperatures = temperatures_permuted([coord00(2):coord11(2)],[coord00(1):coord11(1)],:);
-Nino_12_areas = TAREA([coord00(2):coord11(2)],[coord00(1):coord11(1)]);
-Nino_12_avgs = squeeze(sum(Nino_12_temperatures.*Nino_12_areas,[1 2],'omitnan')./sum(Nino_12_temperatures./Nino_12_temperatures.*Nino_12_areas,[1 2],'omitnan'));
+Nino_12_temperatures = bsxfun(@times,temperatures_permuted,mask10);
+%Nino_12_temperatures = temperatures_permuted([coord00(2):coord11(2)],[coord00(1):coord11(1)],:);
+%Nino_12_areas = TAREA([coord00(2):coord11(2)],[coord00(1):coord11(1)]);
+
+
+%mask = ~isnan(Nino_12_temperatures(:,:,1)); 
+denom = nansum(mask10.*TAREA,[1 2]);
+
+Nino_12_avgs = squeeze(nansum(bsxfun(@times,Nino_12_temperatures,mask10.*TAREA),[1 2]))/denom; 
+
 
 %replace with better solution
 % for counter = 1:size(T,4)
@@ -93,7 +118,7 @@ Nino_12_avgs = squeeze(sum(Nino_12_temperatures.*Nino_12_areas,[1 2],'omitnan').
 Monthly_Data_Matrix = reshape(Nino_12_avgs,[12,100]);
 
 %calculate monthly averages
-monthly_averages = nanmean(Monthly_Data_Matrix,2)
+monthly_averages = nanmean(Monthly_Data_Matrix,2);
 
 %calculate monthly averages
 % for month_number = 1:12
@@ -127,20 +152,26 @@ Anomaly_reshaped = reshape(Anomaly, [1200,1]);
 % fatmatrix(:,4) = [Nino_12_avgs(2:length(Nino_12_avgs)); 1/0];
 % fatmatrix(:,5) = [Nino_12_avgs(3:length(Nino_12_avgs)); 1/0; 1/0];
 
-NaN = std(1/0,2,1)
+% NaN = std(1/0,2,1)
 
-fatmatrix(:,1) = [NaN; NaN; Anomaly_reshaped(1:length(Anomaly_reshaped)-2)];
-fatmatrix(:,2) = [NaN; Anomaly_reshaped(1:length(Anomaly_reshaped)-1)];
-fatmatrix(:,3) = [Anomaly_reshaped];
-fatmatrix(:,4) = [Anomaly_reshaped(2:length(Anomaly_reshaped)); NaN];
-fatmatrix(:,5) = [Anomaly_reshaped(3:length(Anomaly_reshaped)); NaN; NaN];
 
-Nino_12_smoothed = nanmean(fatmatrix,2)
+%%
+% fatmatrix(:,1) = [NaN; NaN; Anomaly_reshaped(1:length(Anomaly_reshaped)-2)];
+% fatmatrix(:,2) = [NaN; Anomaly_reshaped(1:length(Anomaly_reshaped)-1)];
+% fatmatrix(:,3) = [Anomaly_reshaped];
+% fatmatrix(:,4) = [Anomaly_reshaped(2:length(Anomaly_reshaped)); NaN];
+% fatmatrix(:,5) = [Anomaly_reshaped(3:length(Anomaly_reshaped)); NaN; NaN];
+
+Nino_12_smoothed = movmean(Anomaly_reshaped,[2 2]); 
+
+% Nino_12_smoothed = nanmean(fatmatrix,2)
+
+%%
 
 Nino_12_smoothed_STDEV = std(Nino_12_smoothed);
 
 %normalized for standard deviation
-Nino_12_normalized = Nino_12_smoothed - Nino_12_smoothed_STDEV
+Nino_12_normalized = Nino_12_smoothed./Nino_12_smoothed_STDEV
 
 % %Niño 3 (5N-5S, 150W-90W): 
 % lat5N = 183;
