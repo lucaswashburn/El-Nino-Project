@@ -57,14 +57,14 @@ denom = nansum(mask10.*TAREA,[1 2]);
 Nino_avgs = squeeze(nansum(bsxfun(@times,Nino_temperatures,mask10.*TAREA),[1 2]))/denom; 
 
 % group by month
-Monthly_Data_Matrix = reshape(Nino_avgs,[12,100]);
+Monthly_Data_Matrix = reshape(Nino_avgs,[12,time_matrix(end,1)-time_matrix(1,1)]);
 
 %calculate monthly averages
 monthly_averages = nanmean(Monthly_Data_Matrix,2);
 
 % calculate anomaly
 Anomaly  = bsxfun(@minus,Monthly_Data_Matrix,monthly_averages);
-Anomaly_reshaped = reshape(Anomaly, [1200,1]);
+Anomaly_reshaped = reshape(Anomaly, [length(time),1]);
 
 %take 5-month running mean
 Nino_smoothed = movmean(Anomaly_reshaped,[2 2]); 
@@ -80,16 +80,16 @@ Nino_final = Nino_smoothed./Nino_smoothed_STDEV;
 
 
 
-ts1 = timeseries(Nino_final,time);
+Nino_timeseries = timeseries(Nino_final,time);
 
-ts1.Name = 'Nino 1+2 Index SST vs. Time';
-ts1.TimeInfo.Units = 'days';
-ts1.TimeInfo.StartDate = 0000-01-01;     % Set start date.
-ts1.TimeInfo.Format = 'yyyy';       % Set format for display on x-axis.
+Nino_timeseries.Name = 'Nino 1+2 Index SST vs. Time';
+Nino_timeseries.TimeInfo.Units = 'days';
+Nino_timeseries.TimeInfo.StartDate = 0000-01-01;     % Set start date.
+Nino_timeseries.TimeInfo.Format = 'yyyy';       % Set format for display on x-axis.
        % Express time relative to the start date.
 
 figure;
-plot(ts1)
+plot(Nino_timeseries)
 
 
 % figure;
