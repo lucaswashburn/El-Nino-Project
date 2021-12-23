@@ -1,15 +1,9 @@
-function [Nino_final] = Calculate_Nino_Index_Function(latmin,latmax,longmin_180,longmax_180, filename)
+function [Nino_final,El_Nino_Years,La_Nina_Years] = Calculate_Nino_Index_Function(latmin,latmax,longmin_180,longmax_180, filename)
 
 cd ~/Downloads/
-ncdisp(filename);
+%ncdisp(filename);
 
 cd /Users/lucaswashburn/github/El-Nino-Project
-
-% T = ncread('b.e11.B1850C5CN.f09_g16.005.pop.h.SST.040001-049912.nc','SST');
-% time = ncread('b.e11.B1850C5CN.f09_g16.005.pop.h.SST.040001-049912.nc','time');
-% TAREA = ncread('b.e11.B1850C5CN.f09_g16.005.pop.h.SST.040001-049912.nc','TAREA')';
-% TLAT = ncread('b.e11.B1850C5CN.f09_g16.005.pop.h.SST.040001-049912.nc','TLAT')';
-% TLONG =  ncread('b.e11.B1850C5CN.f09_g16.005.pop.h.SST.040001-049912.nc','TLONG')';
 
 T = ncread(filename,'SST');
 time = ncread(filename,'time');
@@ -88,10 +82,58 @@ Nino_timeseries.TimeInfo.StartDate = 0000-01-01;     % Set start date.
 Nino_timeseries.TimeInfo.Format = 'yyyy';       % Set format for display on x-axis.
        % Express time relative to the start date.
 
-figure;
-plot(Nino_timeseries)
+%figure;
+%plot(Nino_timeseries)
 
+Nino_Years_Matrix = zeros(length(Nino_final),3);
 
+signofIndex = 0;
+NinoLengthCounter = 0;
+i_initial = 1;
+
+for i = 1:length(Nino_final)
+    %figure out what happens on first case
+    signEquivalenceTest = signofIndex;
+    switch sign(Nino_final(i))
+        case 1
+            signofIndex = 1;
+        otherwise
+            signofIndex = -1;
+    end
+    
+    if signEquivalenceTest ~= signofIndex
+        Nino_strength = -1*signofIndex*max(abs(Nino_final(i_initial:i)));
+        Nino_Years_Matrix(i,:) = [Nino_strength,i_initial,i];
+        
+        NinoLengthCounter = 0;
+        i_initial = i;
+    end
+end
+
+El_Nino_Years = [];
+La_Nina_Years = [];
+
+i=0;
+
+for i = 1:length(Nino_final)
+    if Nino_Years_Matrix(i,1) > 2
+        El_Nino_Years = [El_Nino_Years; Nino_Years_Matrix(i,:)];
+    elseif Nino_Years_Matrix(i,1) < -2
+        La_Nina_Years = [La_Nina_Years; Nino_Years_Matrix(i,:)];
+    end
+end
+
+% Localmaxes = bsxfun(@times,Nino_final,islocalmax(Nino_final,1))
+% Localmins = bsxfun(@times,Nino_final,islocalmin(Nino_final,1))
+% 
+% q = find(Nino_final > 2);
+% Nino_positive = Nino_final(Nino_final > 0)
+% 
+% %a = find(x(1:end-1)>0 & x(2:end) < 0);
+
+Nino_final;
+El_Nino_Years;
+La_Nina_Years;
 % figure;
 % hold on;
 % plot(time_matrix(:,1,1,1),Nino_final)
