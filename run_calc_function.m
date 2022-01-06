@@ -1,3 +1,5 @@
+%running this function will calculate the nino index for each file, as well
+%as finding nino/nina years and their 
 clear;
 close all;
 

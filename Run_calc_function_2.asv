@@ -1,0 +1,13 @@
+clear;
+close all;
+
+
+FileNames = {'b.e11.B20TRC5CNBDRD.f09_g16.002.pop.h.SST.192001-200512.nc','b.e11.B20TRC5CNBDRD.f09_g16.003.pop.h.SST.192001-200512.nc'};
+Number_of_Nino_12_Events = [];
+for i = 1:length(FileNames)
+    TrialNumber = regexp(char(FileNames(i)),'(?<=g16.)\d{3}','match','once')
+    DateNumber = [regexp(char(FileNames(i)),'(?<=SST.)\d{6}','match','once'),'_',regexp(char(FileNames(i)),'(?<=-)\d{6}','match','once')]
+    %ElNino_12_Events_name = ['ElNino_12_Events_',DateNumber,'_',TrialNumber]
+    [~,ElNino_12_Events,~] = Calculate_Nino_Index_Function(-10,0,-90,-80, char(FileNames(i)));
+    Number_of_Nino_12_Events = [Number_of_Nino_12_Events;length(ElNino_12_Events),TrialNumber,DateNumber];
+end

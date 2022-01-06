@@ -93,13 +93,14 @@ i_initial = 1;
 
 for i = 1:length(Nino_final)
     %figure out what happens on first case
-    signEquivalenceTest = signofIndex;
     switch sign(Nino_final(i))
         case 1
             signofIndex = 1;
         otherwise
             signofIndex = -1;
     end
+    
+    signEquivalenceTest = signofIndex;
     
     if signEquivalenceTest ~= signofIndex
         Nino_strength = -1*signofIndex*max(abs(Nino_final(i_initial:i)));

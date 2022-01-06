@@ -1,0 +1,18 @@
+%average_of_ninos_2
+[~,idx] = sort(Number_of_Nino_Events(:,3)); % sort just the first column
+Number_of_Nino_Events_list = Number_of_Nino_Events(idx,:); % sort the whole matrix using the sort indices
+years_difference1 = diff(Number_of_Nino_Events_list(:,3))
+years_difference2 = diff(Number_of_Nino_Events_list(:,4))
+
+Average_Number_of_Nino_Events = [];
+nino_sum = Number_of_Nino_Events_list(1);
+counter = 1;
+for i = 1:length(years_difference1)
+    if years_difference1(i) == 1 && years_difference2(i) == 1
+            nino_sum = nino_sum + Number_of_Nino_Events_list(i+1);
+        else
+            Average_Number_of_Nino_Events(counter) = [nino_sum/(Number_of_Nino_Events_list(i,4)-Number_of_Nino_Events_list(i,3)), Number_of_Nino_Events_list(i,3), Number_of_Nino_Events_list(i,4)];
+        
+    end
+    
+    else
